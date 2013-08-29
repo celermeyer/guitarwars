@@ -60,7 +60,7 @@ require_once(__DIR__.'/includes/utils.php');
 				echo'<td><img src="'.$url_screenshot.'" alt="screenshot" class="screenshot"/></td>';			
 				
 				?>
-				<td><input type="checkbox" name="score[]" /></td>
+				<td><input type="checkbox" name="score[]" value=<?php echo ($ligne['id']); ?> /></td>
 			</tr>	
 		<?php	
 		} //Fin boucle while 
@@ -68,7 +68,7 @@ require_once(__DIR__.'/includes/utils.php');
 		bd_ferme($cnx);
 	?>
 		</table>
-		<input type="submit" value="Supprimer" />
+		<input type="submit" name="submit" value="Supprimer" />
 		</form>
 	</body>
 </html>

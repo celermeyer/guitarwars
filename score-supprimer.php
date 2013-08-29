@@ -5,34 +5,25 @@ require_once(__DIR__.'/includes/utils.php');
 // Si la page est appelée par le formulaire
 if (isset($_POST['submit']))
 {
-	//Si la suppession a été confirmée    
-    if ($_POST['confirmer'] == 'oui')
-	{
-		//Supression du score    	
-		if(score_supprimer($_POST['id'],$_POST['screenshot'])) 
-			$message = urlencode("Score supprimé !");
-		else
+
+	//Supression du score   
+	$scores = $_POST['score']; 	
+	$reussi = true;
+	foreach ($scores as $score) {
+		if(score_supprimer($score) < 1){
+			$reussi = false;
+		}
+		if($reussi){
+			$message = urlencode("Score(s) supprimé(s) !");
+		}else{
 			$message = urlencode("Suppression impossible pour l'instant !");
+		}
 	}
-	else
-		$message = urlencode("Suppression annulée !");
 	
 	// Redirection vers index.php avec message
 	header("Location: ".SITE_HTTP."admin.php?message=$message");
 	exit;	
 }
-
-//Si un id est passée en paramètre d'URL
-if(strlen($_GET['id'])) 
-	//On charge les données du score
-	if(!$score = score_charger($_GET['id'])) 
-	{	//Si id de client invalide !
-		$message = urlencode("Score introuvable !");
-		header("Location: ".SITE_HTTP."admin.php?message=$message");
-		exit;
-	}
-			
-
 ?><!DOCTYPE html>
 <html lang="fr">
 	<head>
@@ -42,7 +33,7 @@ if(strlen($_GET['id']))
 	</head>
 	<body>
 		<h2>Guitar Wars - Supprimer un score</h2>
-			<p>Etes-vous certain de vouloir supprimer ce score ?</p>
+			<p>Etes-vous certain de vouloir supprimer ce(s) score(s) ?</p>
             <p>
                 <strong>Nom: </strong><?php echo $score['nom']; ?><br/>
                 <strong>Date: </strong><?php echo $score['date']; ?><br/>

@@ -63,7 +63,7 @@ function score_controle($tab_score)
 	}
 
     //Liste des extensions valides
-    $upload_extensions_valides = array( 'jpg' , 'jpeg', 'png' ); 
+    $upload_extensions_valides = array( 'jpg' , 'jpeg', 'png' , 'gif'); 
     //Extension du fichier uploadé
     $upload_extension = pathinfo($_FILES['screenshot']['name'], PATHINFO_EXTENSION);
              
@@ -145,10 +145,9 @@ function score_supprimer($id)
 	$screenshot = $score['screenshot'];
 	
 	//Si la suppression et ok, et que le fichier screenshot existe
-	if($res and !empty($screenshot) and is_file(UPLOAD_PHOTOS.$screenshot))                               
+	if($score and !empty($screenshot) and is_file(UPLOAD_PHOTOS.$screenshot))                               
        unlink(UPLOAD_PHOTOS.$screenshot);
    
-	bd_ferme($cnx);	
 		
 		
 		        		
