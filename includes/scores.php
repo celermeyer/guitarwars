@@ -46,10 +46,7 @@ function score_charger($id)
 function score_controle($tab_score)
 {
 	//Initialisation du tableau des erreurs
-	$erreurs = array();
-	
-	//Liste des types valides
-	$types_valides = 'image/gif;image/jpeg;image/pjpeg;image/png';
+	$erreurs = array();	
 	
 	//Nom du joueur
 	if(!isset($tab_score['nom']) or strlen($tab_score['nom']) < 4)
@@ -65,8 +62,13 @@ function score_controle($tab_score)
 		return $erreurs; //on s'arrête la car les autres tests portent uniquement sur le fichier uploadé
 	}
 
- 	//Si le fichier n'est pas du bon type ou trop grand
-	if(!stripos($types_valides, strtolower($_FILES['screenshot']['type'])) or $_FILES['screenshot']['size'] > UPLOAD_MAX_SIZE)
+    //Liste des extensions valides
+    $upload_extensions_valides = array( 'jpg' , 'jpeg', 'png' ); 
+    //Extension du fichier uploadé
+    $upload_extension = pathinfo($_FILES['screenshot']['name'], PATHINFO_EXTENSION);
+             
+    //Si extension pas valide
+    if(!in_array($upload_extension,$upload_extensions_valides))
 		$erreurs[] = 'Votre screenshot n\'est pas valide !';		
 	
 	return $erreurs;
@@ -77,31 +79,34 @@ function score_controle($tab_score)
 * Ajoute un score dans la base de données 
 *
 * @param	array	Données du score, généralement la superglobale $_POST
-* @return	int		le nombre d'enregistrements modifiés
+* @return	int		le nombre d'enregistrements modifiés, 0 si erreur
 */
 function score_ajouter($tab_score)
 {
+	//Génération d'un identifiant unique pour le nom du screenshot. Nom préfixé de "photo_"
+    $screenshot = uniqid('photo_').".".pathinfo($_FILES['screenshot']['name'], PATHINFO_EXTENSION); 
+    
+    //Copie du screenshot dans le dossier images
+	if(!move_uploaded_file($_FILES['screenshot']['tmp_name'], UPLOAD_PHOTOS.$screenshot))
+        return 0;
+    
 	//Connexion à la BD
 	$cnx = bd_connexion();
 	
-	//Préparation des données
+	//Préparation des données : cast, échappement
 	$score 		= (int) $tab_score['score']; //Cast en entier
 	$nom 		= mysqli_real_escape_string($cnx, $tab_score['nom']);
-	$screenshot = mysqli_real_escape_string($cnx, $_FILES['screenshot']['name']); //Nom du fichier
 	
+    //Ajout du score
 	$req = "INSERT INTO score VALUES (0, NOW(), '$nom', $score,'$screenshot',0)";
-	
-	//Exécution de la requête
 	bd_requete($cnx, $req);
 	
-	//Récupère l'id du dernier enregistrement créé
-	$res = mysqli_insert_id($cnx);
-	
-	//Fermeture de la connexion
+	//Test si enrregistrement ok en récupérant l'id
+	$id = mysqli_insert_id($cnx);        
 	bd_ferme($cnx);
 	
 	//Retourne le nobmre de résultats ajoutés
-	return $res;
+	return $id;
 }
 
 
@@ -130,35 +135,27 @@ function score_valider($id)
 * Supprime un score dans la base de données 
 *
 * @param	int		Id du score à supprimer
+* @param    sting   nom du fichier screenshot
 * @return	int		le nombre d'enregistrements supprimés
 */
-function score_supprimer($id)
-{		
+function score_supprimer($id,$screenshot)
+{        		
 	$cnx = bd_connexion();
 	
 	$requete = "DELETE FROM score WHERE id = $id LIMIT 1";
 			
 	bd_requete($cnx, $requete);
 	
-	$res = mysqli_affected_rows($cnx);
-
+    $res = mysqli_affected_rows($cnx);
+    
+    //Si la suppression et ok, et que le fichier screenshot existe
+	if($res and !empty($screenshot) and is_file(UPLOAD_PHOTOS.$screenshot))                               
+       unlink(UPLOAD_PHOTOS.$screenshot);
+   
 	bd_ferme($cnx);
 	
+    //Retourne le nombre de résultats supprimés
 	return $res;
-}
-
-
-/**
-* Supprime le fichier du screenshot lié à un score
-*
-* @param	int		Id du score
-*/
-function score_supprimer_screenshot($id)
-{		
-	//Récupère les informations du client dans la BD
-	$score = score_charger($id);
-	//Supprime le fichier
-	@unlink(UPLOAD_PHOTOS.$score['screenshot']);
 }
 
 
