@@ -30,6 +30,7 @@ require_once(__DIR__.'/includes/utils.php');
 
 		//Affiche le tableau des scores
 		?>
+		<form method="post" action="score-supprimer.php">
 		<table>
 			<caption>Tableau d'administration des scores</caption>
 			<tr>
@@ -37,13 +38,14 @@ require_once(__DIR__.'/includes/utils.php');
 				<th>Date</th>
 				<th>Score</th>
 				<th>Screenshot</th>
-				<th colspan="2">Actions</th>
+				<th>Actions</th>
 			</tr>
 		<?php
 		
 		//Liste des scores
 		while ($ligne = mysqli_fetch_array($res)) {
 		?>	
+			
 			<tr>
 				<td><?php echo $ligne['nom']; ?></td>
 				<td><?php echo $ligne['date']; ?></td>
@@ -58,15 +60,7 @@ require_once(__DIR__.'/includes/utils.php');
 				echo'<td><img src="'.$url_screenshot.'" alt="screenshot" class="screenshot"/></td>';			
 				
 				?>
-				<td><a href="score-supprimer.php?id=<?php echo $ligne['id']; ?>">Supprimer</a></td>
-				
-				<?php //Si le score a déjà été validé
-				if($ligne['valider']>0)
-					echo "<td>OK</td>";
-				else
-				{ ?>
-					<td><a href="score-valider.php?id=<?php echo $ligne['id']; ?>">Valider</a></td>
-            	<?php } ?>
+				<td><input type="checkbox" name="score[]" /></td>
 			</tr>	
 		<?php	
 		} //Fin boucle while 
@@ -74,5 +68,7 @@ require_once(__DIR__.'/includes/utils.php');
 		bd_ferme($cnx);
 	?>
 		</table>
+		<input type="submit" value="Supprimer" />
+		</form>
 	</body>
 </html>

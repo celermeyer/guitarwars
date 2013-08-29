@@ -138,8 +138,20 @@ function score_valider($id)
 * @param    sting   nom du fichier screenshot
 * @return	int		le nombre d'enregistrements supprimés
 */
-function score_supprimer($id,$screenshot)
-{        		
+function score_supprimer($id)
+{
+	$score = score_charger($id);	
+		
+	$screenshot = $score['screenshot'];
+	
+	//Si la suppression et ok, et que le fichier screenshot existe
+	if($res and !empty($screenshot) and is_file(UPLOAD_PHOTOS.$screenshot))                               
+       unlink(UPLOAD_PHOTOS.$screenshot);
+   
+	bd_ferme($cnx);	
+		
+		
+		        		
 	$cnx = bd_connexion();
 	
 	$requete = "DELETE FROM score WHERE id = $id LIMIT 1";
@@ -148,9 +160,6 @@ function score_supprimer($id,$screenshot)
 	
     $res = mysqli_affected_rows($cnx);
     
-    //Si la suppression et ok, et que le fichier screenshot existe
-	if($res and !empty($screenshot) and is_file(UPLOAD_PHOTOS.$screenshot))                               
-       unlink(UPLOAD_PHOTOS.$screenshot);
    
 	bd_ferme($cnx);
 	
