@@ -38,6 +38,7 @@ require_once(__DIR__.'/includes/utils.php');
 				<th>Date</th>
 				<th>Score</th>
 				<th>Screenshot</th>
+				<th>Validé</th>
 				<th>Actions</th>
 			</tr>
 		<?php
@@ -59,6 +60,11 @@ require_once(__DIR__.'/includes/utils.php');
 				
 				echo'<td><img src="'.$url_screenshot.'" alt="screenshot" class="screenshot"/></td>';			
 				
+				if($ligne['valider'] == 1){
+					echo '<td>Oui</td>';
+				}else{
+					echo '<td>Non</td>';
+				}
 				?>
 				<td><input type="checkbox" name="score[]" value=<?php echo ($ligne['id']); ?> /></td>
 			</tr>	
@@ -69,6 +75,7 @@ require_once(__DIR__.'/includes/utils.php');
 	?>
 		</table>
 		<input type="submit" name="submit" value="Supprimer" />
+		<input type="submit" name="submit" value="Valider" />
 		</form>
 	</body>
 </html>
