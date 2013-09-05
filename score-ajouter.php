@@ -24,8 +24,7 @@ if (isset($_POST['submit']))
     //Récuéprer les données saisies et les mettre
     //comme valeur par défaut du formulaire
     $form_nom = $_POST['nom'];
-    $form_score = $_POST['score'];  
-	$form_pays = $_POST['pays'];         
+    $form_score = $_POST['score'];           
 }
 //Affiche le fomulaire
 require_once ('score-formulaire.php');

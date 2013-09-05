@@ -7,6 +7,37 @@
  * @version		12.05.2013 * 
  */
 
+/**
+* Retourne la liste des scores
+*
+* @param    boolean     Faut-il afficher les score invalides, par défaut non
+* @param    string      Tri de la requête, par défaut score >, date <
+* @return   array       Tableau associatif contenant les données du score, ou false
+*/
+function score_liste($afficher_invalides=false,$tri="score DESC, date ASC")
+{
+    $cnx = bd_connexion();    
+ 
+    $requete = "SELECT *, score.id as scoreId, pays.id as paysId 
+				FROM score, pays
+				WHERE score.pays = pays.id";
+				//LIMIT 0 , 30";
+    
+    if($afficher_invalides==false) 
+        $requete .=" AND valider = 1"; 
+    
+    $requete .=" ORDER BY $tri";
+         
+    $res = bd_requete($cnx, $requete);
+    
+    /*$res = bd_requete($cnx, $requete);
+    $temp = mysqli_fetch_array($res);
+	var_dump($temp); exit;*/
+	
+    bd_ferme($cnx);    
+   
+    return $res;
+}
 
 /**
 * Sélectionne un score dans la BD et retourne ses données
@@ -16,76 +47,22 @@
 */
 function score_charger($id)
 {
-	//Connexion à la BD
 	$cnx = bd_connexion();
 	
-	//Préparation de la requête
 	$requete = "SELECT * FROM score
 				WHERE id = $id
 				LIMIT 1"; 
 			
-	//Exécution de la requête
 	$res = bd_requete($cnx, $requete);
 	
-	//Fermeture de la connexion
 	bd_ferme($cnx);
 	
-	//Si un résultat a été trouvé
+	//Si un résultat a été trouvé, on le retourne
 	if(mysqli_num_rows($res))
 		return mysqli_fetch_assoc($res);
 	
 	return false;
 }
-
-function pays_charger($id)
-{
-	//Connexion à la BD
-	$cnx = bd_connexion();
-	
-	//Préparation de la requête
-	$requete = "SELECT * FROM score, pays WHERE score.id = $id AND pays.id = score.id_pays";
-			
-	//Exécution de la requête
-	$res = bd_requete($cnx, $requete);
-	
-	//Fermeture de la connexion
-	bd_ferme($cnx);
-	
-	//Si un résultat a été trouvé
-	if(mysqli_num_rows($res)){
-		$ligne = mysqli_fetch_assoc($res);
-		$pays = $ligne['nom'];
-		return $pays;
-	}
-	
-	return false;
-}
-
-function liste_pays_charger()
-{
-	//Connexion à la BD
-	$cnx = bd_connexion();
-	
-	//Préparation de la requête
-	$requete = "SELECT * FROM pays";
-			
-	//Exécution de la requête
-	$res = bd_requete($cnx, $requete);
-	
-	//Fermeture de la connexion
-	bd_ferme($cnx);
-	
-	//Si un résultat a été trouvé
-	if(mysqli_num_rows($res)){
-		return $res;
-	}
-	
-	
-	
-	return false;
-}
-
-
  
 /**
 * Controle les données du score
@@ -101,13 +78,14 @@ function score_controle($tab_score)
 	//Nom du joueur
 	if(!isset($tab_score['nom']) or strlen($tab_score['nom']) < 4)
 		$erreurs[] = 'Entrez un login valide ! Le login doit contenir au moins 4 caractères !';
+	
 	//Score
 	if(!isset($tab_score['score']) or !is_numeric($tab_score['score']))
 		$erreurs[] = 'Entrez un score valide !';
 	
 	//Pays
-	if(!isset($tab_score['pays']) or $tab_score['pays'] == 0)
-		$erreurs[] = 'Choisissez un pays !';
+	if(!isset($tab_score['pays']) or !is_numeric($tab_score['pays']) or (int) $tab_score['pays'] == 0)
+		$erreurs[] = 'Sélectionnez un pays !';
 	
 	//Si aucun fichier a été envoyé ou qu'il y a eu une erreur de transfert
 	if(!isset($_FILES['screenshot']) or $_FILES['screenshot']['error'])
@@ -115,56 +93,66 @@ function score_controle($tab_score)
 		$erreurs[] = 'Aucun screenshot reçu ! Sélectionner une image valide !';
 		return $erreurs; //on s'arrête la car les autres tests portent uniquement sur le fichier uploadé
 	}
-	
 
     //Liste des extensions valides
-    $upload_extensions_valides = array( 'jpg' , 'jpeg', 'png' , 'gif'); 
+    $upload_extensions_valides = array( 'jpg' , 'jpeg', 'png' ); 
     //Extension du fichier uploadé
     $upload_extension = pathinfo($_FILES['screenshot']['name'], PATHINFO_EXTENSION);
              
     //Si extension pas valide
     if(!in_array($upload_extension,$upload_extensions_valides))
-		$erreurs[] = 'Votre screenshot n\'est pas valide !';		
+		$erreurs[] = 'Votre screenshot n\'est pas valide !';
 	
 	return $erreurs;
 }
-
 
 /**
 * Ajoute un score dans la base de données 
 *
 * @param	array	Données du score, généralement la superglobale $_POST
-* @return	int		le nombre d'enregistrements modifiés, 0 si erreur
+* @return	int		l'id de l'enregistrement créé, 0 si erreur
 */
 function score_ajouter($tab_score)
 {
 	//Génération d'un identifiant unique pour le nom du screenshot. Nom préfixé de "photo_"
     $screenshot = uniqid('photo_').".".pathinfo($_FILES['screenshot']['name'], PATHINFO_EXTENSION); 
     
-    //Copie du screenshot dans le dossier images
+    //Copie du screenshot dans le dossier images. 
+    //Si erreur de transfert on retourne 0
 	if(!move_uploaded_file($_FILES['screenshot']['tmp_name'], UPLOAD_PHOTOS.$screenshot))
         return 0;
     
-	//Connexion à la BD
 	$cnx = bd_connexion();
-	
+    	
 	//Préparation des données : cast, échappement
 	$score 		= (int) $tab_score['score']; //Cast en entier
 	$nom 		= mysqli_real_escape_string($cnx, $tab_score['nom']);
-	$pays		= mysqli_real_escape_string($cnx, $tab_score['pays']);
+	$pays 		= (int) $tab_score['pays']; //Cast en entier
 	
-    //Ajout du score
-	$req = "INSERT INTO score VALUES (0, NOW(), '$nom', $score,'$screenshot',0, $pays)";
+	$req =  "INSERT INTO  score (
+                                    nom,
+                                    score,
+                                    screenshot,
+                                    valider,
+                                    pays
+                                 )
+                                 VALUES (
+                                    '$nom',
+                                    $score,
+                                    '$screenshot',
+                                    0,
+                                    $pays
+                                 )";
 	bd_requete($cnx, $req);
 	
-	//Test si enrregistrement ok en récupérant l'id
+	//Récupère l'id du denier enregistrement
+	//ou 0 si erreur
 	$id = mysqli_insert_id($cnx);        
+	
 	bd_ferme($cnx);
 	
-	//Retourne le nobmre de résultats ajoutés
 	return $id;
 }
-
 
 /**
 * Valide un score dans la base de données 
@@ -176,7 +164,9 @@ function score_valider($id)
 {
 	$cnx = bd_connexion();
 	
-	$req = "UPDATE score SET valider = 1 WHERE id = $id LIMIT 1";
+	$req = "   UPDATE score SET valider = 1
+	           WHERE id = $id
+	           LIMIT 1";
 	
 	bd_requete($cnx, $req);
 	
@@ -191,30 +181,25 @@ function score_valider($id)
 * Supprime un score dans la base de données 
 *
 * @param	int		Id du score à supprimer
-* @param    sting   nom du fichier screenshot
 * @return	int		le nombre d'enregistrements supprimés
 */
 function score_supprimer($id)
-{
-	$score = score_charger($id);	
-		
-	$screenshot = $score['screenshot'];
-	
-	//Si la suppression et ok, et que le fichier screenshot existe
-	if($score and !empty($screenshot) and is_file(UPLOAD_PHOTOS.$screenshot))                               
-       unlink(UPLOAD_PHOTOS.$screenshot);
-   
-		
-		
-		        		
+{        		
 	$cnx = bd_connexion();
+    
+    //Récupération du nom de fichier du screenshot à supprimer
+    $score = score_charger($id);    
+    $screenshot = $score['screenshot'];
 	
-	$requete = "DELETE FROM score WHERE id = $id LIMIT 1";
-			
+	//Suppression du score dans la BD
+	$requete = "DELETE FROM score WHERE id = $id LIMIT 1";			
 	bd_requete($cnx, $requete);
 	
-    $res = mysqli_affected_rows($cnx);
+	$res = mysqli_affected_rows($cnx);
     
+    //Si la suppression est ok, et que le fichier screenshot existe, on le supprime
+	if($res and !empty($screenshot) and is_file(UPLOAD_PHOTOS.$screenshot))                               
+       unlink(UPLOAD_PHOTOS.$screenshot);
    
 	bd_ferme($cnx);
 	
@@ -222,6 +207,63 @@ function score_supprimer($id)
 	return $res;
 }
 
-
-
-
+/**
+* Génère un lien permettant de trié les données d'une requête
+*
+* @param   string  Texte du lien
+* @param   string  Nom de la colonne a trier
+* @param   string  Nom de la colonne actuellement triée
+* @param   string  Sens du tri actuel asc, desc
+* @return  string  Lien html avec les paramètres de tri
+*/
+function lien_tri_score($texte_lien, $nom_col, $tri_actuel_col, $tri_actuel_sens) {
+     $res = "<a href=\"".$_SERVER['PHP_SELF']."?c=";
+     
+	 
+	 /*echo $texte_lien."</br>";
+	 echo $nom_col."</br>";
+	 echo $tri_actuel_col."</br>";
+	 echo $tri_actuel_sens."</br>";*/
+	 
+	 
+     //Détermine un n° pour chaque colonne
+     switch($nom_col) {
+          case "score.score":
+               $res .= 1;
+               $sens_par_defaut = 1; //DESC
+               break;
+          case "score.nom":
+               $res .= 2;
+			   $sens_par_defaut = 0; //ASC
+               break;
+          case "score.date":
+               $res .= 3;
+			   $sens_par_defaut = 1;
+               break;
+          case "pays.libelle":
+               $res .= 4;
+			   $sens_par_defaut = 0;
+               break;
+          default:
+               $res .= 1;
+			   $sens_par_defaut = 1;
+     }
+	
+	 //Détermine le sens du tri 0=ASC 1=DESC	 
+     $res .= "&s=";
+ 
+     //Inverse le tri actuel
+     if($nom_col == $tri_actuel_col) {
+		if($tri_actuel_sens == "ASC") 
+			$res.= "1";
+		else
+			$res.= "0";          
+     }
+     else //Sinon on appplique le sens par défaut de la colonne concernée
+     	$res.= $sens_par_defaut;
+  
+     //Texte du lien
+     $res .= "\">$texte_lien</a>";
+ 
+     return $res;
+}

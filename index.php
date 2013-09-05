@@ -2,30 +2,57 @@
 //Inclusion des librairies
 require_once(__DIR__.'/includes/utils.php');
 
+//Initialisation des variables
+$url_col = null;
+$url_sens = null;
+
+//Récupère les paramètres d'url
+if(isset($_GET['c'])) $url_col = $_GET['c'];
+if(isset($_GET['s'])) $url_sens = $_GET['s'];
+
+//Récupère le tri demandé ou applique le tri par défaut
+switch($url_col) {
+     case "1":
+          $tri_col = "score.score";
+          break;
+     case "2":
+          $tri_col = "score.nom";
+          break;
+     case "3":
+          $tri_col = "score.date";
+          break;
+     case "4":
+          $tri_col = "pays.libelle";
+          break;
+     default:
+          $tri_col = "score.score";
+}
+
+//Récupère l'orde du tri : asc ou desc 
+if($url_sens == "0") 
+     $tri_sens = "ASC";
+else 
+     $tri_sens = "DESC";
+
 ?><!DOCTYPE html>
 <html lang="fr">
 	<head>
 		<meta charset="UTF-8">
-		<title>Meilleurs scores | Guitar Wars</title>
+		<title>Meilleurs scores | <?php echo SITE_NOM; ?></title>
 		<link rel="stylesheet" type="text/css" href="style.css" />
 	</head>
 	<body>
 		<h1>Guitar Wars - Meilleurs scores !</h1>
 		<p>Hé Guitar Warrior, es-tu le maître absolu de Guitar Wars ?</p>
 		<p>Pour le savoir <a href="score-ajouter.php">ajoute ton score</a>.</p>
-		<p>Envie de gérer les scores reçus ? Direction la <a href="admin.php" >page d'administation</a> !</p>
 		<?php
 
 		//Message de confirmation ou d'erreur 
 		if(isset($_GET['message']))
 			echo '<p>'.$_GET['message'].'</p>';
 		
-		//Connexion
-		$cnx = bd_connexion();
-		
-		//Sélection des scores triés par score et date
-		$req = "SELECT * FROM score WHERE valider = 1 ORDER BY score DESC, date ASC";
-		$res = bd_requete($cnx, $req);
+		//Récupère la liste des scores
+		$res = score_liste(false, $tri_col." ".$tri_sens);
 		
 		//Si aucun résultat
 		if(mysqli_num_rows($res) < 1)
@@ -34,10 +61,10 @@ require_once(__DIR__.'/includes/utils.php');
 		<table>
 			<caption>Classement mondial Guitar Wars</caption>
 			<tr>
-				<th colspan="2">Score</th>
-				<th>Nom</th>
-				<th>Date</th>
-				<th>Pays</th>
+				<th colspan="2"><?php echo lien_tri_score('Score', 'score.score', $tri_col,$tri_sens);?></th>
+				<th><?php echo lien_tri_score('Nom', 'score.nom', $tri_col,$tri_sens);?></th>
+				<th><?php echo lien_tri_score('Date', 'score.date', $tri_col,$tri_sens);?></th>
+				<th><?php echo lien_tri_score('Pays', 'pays.libelle', $tri_col,$tri_sens);?></th>
 			</tr>
 		<?php
 		//Charge la 1re ligne du résultat
@@ -62,14 +89,12 @@ require_once(__DIR__.'/includes/utils.php');
 				<td><?php echo $ligne['score']; ?></td>
 				<td><?php echo $ligne['nom']; ?></td>
 				<td><?php echo $ligne['date']; ?></td>
-				<td><?php echo pays_charger($ligne['id']); ?></td>
+				<td><?php echo $ligne['libelle']; ?></td>
 			</tr>	
 		
 		<?php
         } while ($ligne = mysqli_fetch_array($res));
-		
-		//Fermeture de la connexion
-		bd_ferme($cnx);
+
 		?>
 		</table>
 	</body>

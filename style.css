@@ -8,7 +8,7 @@ table, tr, th, td {
 	border: 1px solid black;
 }
 
-th {
+th, th a {
 	background-color: black;
 	color: white;
 }

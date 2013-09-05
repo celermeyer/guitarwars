@@ -1,7 +1,7 @@
 <?php
 /**
  * Fichier de configuration du site
- * 
+ *  
  * @author    	Steve Fallet <steve.fallet@divtec.ch>
  * @copyright	2013 - EMT Porrentruy
  * @version		15.05.2013
@@ -20,7 +20,7 @@ define('UPLOAD_MAX_SIZE', 2097152); //2 M
 define('BD_SERVEUR',	'localhost');
 define('BD_UTILISATEUR','root');
 define('BD_MDP',		'');
-define('BD_BASE',		'guitarwars');
+define('BD_BASE',		'gw1');
 define('BD_CHARSET',	'utf8');
 
 //Mode débug
