@@ -38,6 +38,7 @@ require_once(__DIR__.'/includes/utils.php');
 				<th>Date</th>
 				<th>Score</th>
 				<th>Screenshot</th>
+				<th>Pays</th>
 				<th>Validé</th>
 				<th>Actions</th>
 			</tr>
@@ -59,6 +60,7 @@ require_once(__DIR__.'/includes/utils.php');
 					$url_screenshot = SITE_IMAGES.'unverified.gif';
 				
 				echo'<td><img src="'.$url_screenshot.'" alt="screenshot" class="screenshot"/></td>';			
+				echo '<td>' . pays_charger($ligne['id']) . '</td>';
 				
 				if($ligne['valider'] == 1){
 					echo '<td>Oui</td>';

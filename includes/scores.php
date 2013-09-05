@@ -36,6 +36,56 @@ function score_charger($id)
 	
 	return false;
 }
+
+function pays_charger($id)
+{
+	//Connexion à la BD
+	$cnx = bd_connexion();
+	
+	//Préparation de la requête
+	$requete = "SELECT * FROM score, pays WHERE score.id = $id AND pays.id = score.id_pays";
+			
+	//Exécution de la requête
+	$res = bd_requete($cnx, $requete);
+	
+	//Fermeture de la connexion
+	bd_ferme($cnx);
+	
+	//Si un résultat a été trouvé
+	if(mysqli_num_rows($res)){
+		$ligne = mysqli_fetch_assoc($res);
+		$pays = $ligne['nom'];
+		return $pays;
+	}
+	
+	return false;
+}
+
+function liste_pays_charger()
+{
+	//Connexion à la BD
+	$cnx = bd_connexion();
+	
+	//Préparation de la requête
+	$requete = "SELECT * FROM pays";
+			
+	//Exécution de la requête
+	$res = bd_requete($cnx, $requete);
+	
+	//Fermeture de la connexion
+	bd_ferme($cnx);
+	
+	//Si un résultat a été trouvé
+	if(mysqli_num_rows($res)){
+		return $res;
+	}
+	
+	
+	
+	return false;
+}
+
+
  
 /**
 * Controle les données du score
@@ -55,12 +105,17 @@ function score_controle($tab_score)
 	if(!isset($tab_score['score']) or !is_numeric($tab_score['score']))
 		$erreurs[] = 'Entrez un score valide !';
 	
+	//Pays
+	if(!isset($tab_score['pays']) or $tab_score['pays'] == 0)
+		$erreurs[] = 'Choisissez un pays !';
+	
 	//Si aucun fichier a été envoyé ou qu'il y a eu une erreur de transfert
 	if(!isset($_FILES['screenshot']) or $_FILES['screenshot']['error'])
 	{
 		$erreurs[] = 'Aucun screenshot reçu ! Sélectionner une image valide !';
 		return $erreurs; //on s'arrête la car les autres tests portent uniquement sur le fichier uploadé
 	}
+	
 
     //Liste des extensions valides
     $upload_extensions_valides = array( 'jpg' , 'jpeg', 'png' , 'gif'); 
@@ -96,9 +151,10 @@ function score_ajouter($tab_score)
 	//Préparation des données : cast, échappement
 	$score 		= (int) $tab_score['score']; //Cast en entier
 	$nom 		= mysqli_real_escape_string($cnx, $tab_score['nom']);
+	$pays		= mysqli_real_escape_string($cnx, $tab_score['pays']);
 	
     //Ajout du score
-	$req = "INSERT INTO score VALUES (0, NOW(), '$nom', $score,'$screenshot',0)";
+	$req = "INSERT INTO score VALUES (0, NOW(), '$nom', $score,'$screenshot',0, $pays)";
 	bd_requete($cnx, $req);
 	
 	//Test si enrregistrement ok en récupérant l'id

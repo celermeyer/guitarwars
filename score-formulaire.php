@@ -33,11 +33,45 @@
 			<input type="text" id="score" name="score" value="<?php if (isset($form_score)) echo $form_score; ?>" />
 			<br />
 			
+			<label for="pays">Pays:</label>
+    		<select name="pays" id="pays">
+    			<option value="0">Sélectionner un pays...</option>
+    			<?php
+    				//Connexion à la BD
+					$cnx = bd_connexion();
+					
+					//Préparation de la requête
+					$requete = "SELECT * FROM pays";
+							
+					//Exécution de la requête
+					$res = bd_requete($cnx, $requete);
+					
+					//Fermeture de la connexion
+					bd_ferme($cnx);
+					
+					//Si un résultat a été trouvé
+					if(mysqli_num_rows($res)){
+						while($pays = mysqli_fetch_assoc($res)){
+    					$valeur = $pays['id'];
+						$nom = $pays['nom'];
+						if(isset($form_pays) and $form_pays == $valeur){
+							echo '<option selected=selected value=' . $valeur . '>' . $nom . '</option>';	
+						}else{
+							echo '<option value=' . $valeur . '>' . $nom . '</option>';
+						}
+    					
+						}	
+					}
+    			?>
+    		</select><a href="pays-ajouter.php"> Ajouter un pays</a>
+    		<br/>
+			
 			<label for="screenshot">Screen shot:</label>    		
     		<input type="file" id="screenshot" name="screenshot" />
     		<br/>
     		
-    		<p>Note : Le screenshot doit être au format jpeg, png ou gif et ne doit pas dépasser les 20 MO !</p>
+    		
+    		<p>Note : Le screenshot doit être au format jpeg, png ou gif et ne doit pas dépasser les 20 Mo !</p>
     		    	
 			<input type="submit" value="Go Go Go !" name="submit" />
 		</form>		

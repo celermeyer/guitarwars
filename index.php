@@ -13,6 +13,7 @@ require_once(__DIR__.'/includes/utils.php');
 		<h1>Guitar Wars - Meilleurs scores !</h1>
 		<p>Hé Guitar Warrior, es-tu le maître absolu de Guitar Wars ?</p>
 		<p>Pour le savoir <a href="score-ajouter.php">ajoute ton score</a>.</p>
+		<p>Envie de gérer les scores reçus ? Direction la <a href="admin.php" >page d'administation</a> !</p>
 		<?php
 
 		//Message de confirmation ou d'erreur 
@@ -36,13 +37,14 @@ require_once(__DIR__.'/includes/utils.php');
 				<th colspan="2">Score</th>
 				<th>Nom</th>
 				<th>Date</th>
+				<th>Pays</th>
 			</tr>
 		<?php
 		//Charge la 1re ligne du résultat
 		$ligne = mysqli_fetch_array($res);
         
         //Affiche le TOP Score (1re ligne)
-        echo '<tr><td colspan="4" class="topscore">Top score ' . $ligne['score'] . ' pts</td></tr>';
+        echo '<tr><td colspan="5" class="topscore">Top score ' . $ligne['score'] . ' pts</td></tr>';
 		
 		// Parcours le résultat MySQL et construit le tableau HTML
 		do {     			 	
@@ -60,6 +62,7 @@ require_once(__DIR__.'/includes/utils.php');
 				<td><?php echo $ligne['score']; ?></td>
 				<td><?php echo $ligne['nom']; ?></td>
 				<td><?php echo $ligne['date']; ?></td>
+				<td><?php echo pays_charger($ligne['id']); ?></td>
 			</tr>	
 		
 		<?php
